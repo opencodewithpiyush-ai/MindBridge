@@ -8,12 +8,20 @@ import (
 	"mindbridge/config"
 	domainRepo "mindbridge/domain/repositories"
 	"mindbridge/infrastructure/generators"
+	"mindbridge/infrastructure/repositories"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRoutes(router *gin.Engine, chatRepo domainRepo.IChatRepository, fileRepo domainRepo.IFileRepository) {
+	router.GET("/", IndexHandler)
+	router.GET("/models", ListModelsHandler)
+	router.POST("/upload", fileUploadHandler(fileRepo))
+	router.GET("/file/:key", fileGetHandler(fileRepo))
+}
+
+func SetupChatRoutes(router *gin.RouterGroup, chatRepo domainRepo.IChatRepository, fileRepo domainRepo.IFileRepository) {
 	idGenerator := generators.NewIDGenerator()
 	emailGenerator := generators.NewEmailGenerator()
 
@@ -29,27 +37,41 @@ func SetupRoutes(router *gin.Engine, chatRepo domainRepo.IChatRepository, fileRe
 		availableModels,
 	)
 
-	router.GET("/", indexHandler)
-	router.GET("/models", listModelsHandler)
 	router.POST("/chat", chatHandler(processChatUseCase))
 	router.POST("/chat/stream", chatStreamHandler(chatRepo, idGenerator, emailGenerator, availableModels))
 	router.POST("/upload", fileUploadHandler(fileRepo))
 	router.GET("/file/:key", fileGetHandler(fileRepo))
 }
 
-func indexHandler(c *gin.Context) {
+func NewAuthUseCaseHandler(userRepo domainRepo.IUserRepository, authService domainRepo.IAuthService, redisClient *repositories.RedisClient) *usecases.AuthUseCase {
+	return usecases.NewAuthUseCase(userRepo, authService, redisClient)
+}
+
+func IndexHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"message": "MindBridge API Server",
-		"version": "1.0.0",
+		"message":     "MindBridge API Server",
+		"version":     "1.1.2",
+		"description": "AI Chat Gateway with Multi-Model Support",
+		"owner": gin.H{
+			"name":   "Piyush Makwana",
+			"email":  "piyushmakwana@mindbridge.ai",
+			"github": "https://github.com/piyushmakwana",
+		},
 		"endpoints": gin.H{
-			"GET /":       "API info",
-			"GET /models": "List all available models",
-			"POST /chat":  "Send chat message",
+			"GET /":               "API info",
+			"GET /models":         "List available AI models",
+			"POST /auth/register": "Register new user",
+			"POST /auth/login":    "Login and get session",
+			"POST /auth/logout":   "Logout and destroy session",
+			"POST /chat":          "Send chat message (protected)",
+			"POST /chat/stream":   "Chat with streaming (protected)",
+			"POST /upload":        "Upload file (protected)",
+			"GET /file/:key":      "Get file URL (protected)",
 		},
 	})
 }
 
-func listModelsHandler(c *gin.Context) {
+func ListModelsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"models":  config.Models,
