@@ -81,6 +81,9 @@ func main() {
 
 	router.GET("/", handlers.IndexHandler)
 	router.GET("/models", handlers.ListModelsHandler)
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
 
 	go func() {
 		logger.Printf("MindBridge running at http://%s:%d", config.ServerHost, config.ServerPort)
