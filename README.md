@@ -2,7 +2,7 @@
 
 A clean architecture REST API server with authentication and chat functionality.
 
-## Tech Stack
+## Technology Stack
 
 - **Framework**: Gin (Go web framework)
 - **Architecture**: Clean Architecture
