@@ -291,3 +291,6 @@ curl http://127.0.0.1:5000/file/chat/files/abc123.jpg \
 | 15 | gateway-qwen-3-max         | Qwen 3 Max            |
 | 16 | gateway-llama-3-3-70b-versatile | Llama 3.3 70B     |
 | 17 | gateway-deepinfra-kimi-k2  | Kimi K2               |
+
+## Support The Developer
+Give it a ⭐. If You Found This Useful.
