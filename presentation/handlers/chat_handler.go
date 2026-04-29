@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"mindbridge/application/dto"
@@ -14,33 +15,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRoutes(router *gin.Engine, chatRepo domainRepo.IChatRepository, fileRepo domainRepo.IFileRepository) {
-	router.GET("/", IndexHandler)
-	router.GET("/models", ListModelsHandler)
-	router.POST("/upload", fileUploadHandler(fileRepo))
-	router.GET("/file/:key", fileGetHandler(fileRepo))
-}
-
 func SetupChatRoutes(router *gin.RouterGroup, chatRepo domainRepo.IChatRepository, fileRepo domainRepo.IFileRepository) {
 	idGenerator := generators.NewIDGenerator()
 	emailGenerator := generators.NewEmailGenerator()
 
-	availableModels := make([]string, len(config.Models))
-	for i, m := range config.Models {
-		availableModels[i] = m.Name
-	}
-
-	processChatUseCase := usecases.NewProcessChatUseCase(
-		chatRepo,
-		idGenerator,
-		emailGenerator,
-		availableModels,
-	)
-
-	router.POST("/chat", chatHandler(processChatUseCase))
-	router.POST("/chat/stream", chatStreamHandler(chatRepo, idGenerator, emailGenerator, availableModels))
+	router.POST("/chat/stream-raw", chatStreamRawHandler(chatRepo, idGenerator, emailGenerator))
 	router.POST("/upload", fileUploadHandler(fileRepo))
-	router.GET("/file/:key", fileGetHandler(fileRepo))
 }
 
 func NewAuthUseCaseHandler(userRepo domainRepo.IUserRepository, authService domainRepo.IAuthService, redisClient *repositories.RedisClient) *usecases.AuthUseCase {
@@ -58,15 +38,13 @@ func IndexHandler(c *gin.Context) {
 			"github": "https://github.com/piyushmakwana",
 		},
 		"endpoints": gin.H{
-			"GET /":               "API info",
-			"GET /models":         "List available AI models",
-			"POST /auth/register": "Register new user",
-			"POST /auth/login":    "Login and get session",
-			"POST /auth/logout":   "Logout and destroy session",
-			"POST /chat":          "Send chat message (protected)",
-			"POST /chat/stream":   "Chat with streaming (protected)",
-			"POST /upload":        "Upload file (protected)",
-			"GET /file/:key":      "Get file URL (protected)",
+			"GET /":                 "API info",
+			"GET /models":           "List available AI models",
+			"POST /auth/register":   "Register new user",
+			"POST /auth/login":      "Login and get session",
+			"POST /auth/logout":     "Logout and destroy session",
+			"POST /chat/stream-raw": "Chat with full streaming (protected)",
+			"POST /upload":          "Upload file (protected)",
 		},
 	})
 }
@@ -78,63 +56,15 @@ func ListModelsHandler(c *gin.Context) {
 	})
 }
 
-func chatHandler(useCase *usecases.ProcessChatUseCase) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		clientIP := c.ClientIP()
-		logger := log.New(log.Writer(), "[ChatHandler] ", log.LstdFlags)
-		logger.Printf("Chat endpoint called | IP: %s", clientIP)
-
-		var request dto.ChatRequestDTO
-		if err := c.ShouldBindJSON(&request); err != nil {
-			logger.Printf("Invalid request body | IP: %s | Error: %v", clientIP, err)
-			c.JSON(http.StatusBadRequest, gin.H{
-				"success": false,
-				"error":   "Request body is required",
-			})
-			return
-		}
-
-		if request.Model == "" {
-			request.Model = "gateway-claude-opus-4-1"
-		}
-
-		logger.Printf("Processing request | Model: %s | Query: %s...", request.Model, truncate(request.Query, 30))
-
-		result := useCase.Execute(request)
-
-		if result.Success {
-			logger.Printf("Request successful | Title: %v | IP: %s", result.Data.(map[string]interface{})["title"], clientIP)
-			c.JSON(http.StatusOK, gin.H{
-				"success": true,
-				"data":    result.Data,
-			})
-		} else {
-			logger.Printf("Request failed | Error: %s | IP: %s", result.Error, clientIP)
-			c.JSON(http.StatusBadRequest, gin.H{
-				"success": false,
-				"error":   result.Error,
-			})
-		}
-	}
-}
-
-func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen] + "..."
-}
-
-func chatStreamHandler(
+func chatStreamRawHandler(
 	chatRepo domainRepo.IChatRepository,
 	idGenerator domainRepo.IIDGenerator,
 	emailGenerator domainRepo.IEmailGenerator,
-	availableModels []string,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
-		logger := log.New(log.Writer(), "[ChatStreamHandler] ", log.LstdFlags)
-		logger.Printf("Stream endpoint called | IP: %s", clientIP)
+		logger := log.New(log.Writer(), "[ChatStreamRawHandler] ", log.LstdFlags)
+		logger.Printf("Raw stream endpoint called | IP: %s", clientIP)
 
 		var request dto.ChatRequestDTO
 		if err := c.ShouldBindJSON(&request); err != nil {
@@ -159,7 +89,7 @@ func chatStreamHandler(
 			email = *request.Email
 		}
 
-		logger.Printf("Processing stream request | Model: %s | Query: %s...", request.Model, truncate(request.Query, 30))
+		logger.Printf("Processing raw stream request | Model: %s | Query: %s...", request.Model, truncate(request.Query, 30))
 
 		c.Header("Content-Type", "text/event-stream")
 		c.Header("Cache-Control", "no-cache")
@@ -187,37 +117,46 @@ func chatStreamHandler(
 		var err error
 
 		if len(request.Files) > 0 {
-			title, response, err = chatRepo.SendMessageWithFiles(
+			title, response, err = chatRepo.SendMessageWithFilesRaw(
 				request.Query,
 				request.Model,
 				userID,
 				email,
 				request.Files,
-				func(chunk string) {
-					sendEvent("chunk", fmt.Sprintf(`{"chunk": %q}`, chunk))
+				func(chunk map[string]interface{}) {
+					dataBytes, _ := json.Marshal(chunk)
+					sendEvent("chunk", string(dataBytes))
 				},
 			)
 		} else {
-			title, response, err = chatRepo.SendMessageStream(
+			title, response, err = chatRepo.SendMessageStreamRaw(
 				request.Query,
 				request.Model,
 				userID,
 				email,
-				func(chunk string) {
-					sendEvent("chunk", fmt.Sprintf(`{"chunk": %q}`, chunk))
+				func(chunk map[string]interface{}) {
+					dataBytes, _ := json.Marshal(chunk)
+					sendEvent("chunk", string(dataBytes))
 				},
 			)
 		}
 
 		if err != nil {
-			logger.Printf("Stream error | Error: %s | IP: %s", err, clientIP)
+			logger.Printf("Raw stream error | Error: %s | IP: %s", err, clientIP)
 			sendEvent("error", fmt.Sprintf(`{"error": %q}`, err.Error()))
 			return
 		}
 
-		logger.Printf("Stream complete | Title: %s | IP: %s", title, clientIP)
+		logger.Printf("Raw stream complete | Title: %s | IP: %s", title, clientIP)
 		sendEvent("done", fmt.Sprintf(`{"title": %q, "response": %q}`, title, response))
 	}
+}
+
+func truncate(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
 }
 
 func fileUploadHandler(fileRepo domainRepo.IFileRepository) gin.HandlerFunc {
@@ -275,25 +214,6 @@ func fileUploadHandler(fileRepo domainRepo.IFileRepository) gin.HandlerFunc {
 			"success": true,
 			"key":     key,
 			"url":     url,
-		})
-	}
-}
-
-func fileGetHandler(fileRepo domainRepo.IFileRepository) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		key := c.Param("key")
-		if key == "" {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"success": false,
-				"error":   "File key is required",
-			})
-			return
-		}
-
-		fileURL := fileRepo.GetFileURL(key)
-		c.JSON(http.StatusOK, gin.H{
-			"success": true,
-			"url":     fileURL,
 		})
 	}
 }

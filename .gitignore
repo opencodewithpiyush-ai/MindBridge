@@ -20,10 +20,16 @@ vendor/
 # Environment
 .env
 .env.local
+.env*.local
 .idea/
 .vscode/
 *.swp
+mindbridge.log
 *.swo
+
+# Web
+web/node_modules/
+web/dist/
 
 # OS
 .DS_Store
