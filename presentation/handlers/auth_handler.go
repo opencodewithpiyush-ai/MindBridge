@@ -13,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupAuthRoutes(router *gin.Engine, authUseCase *usecases.AuthUseCase, authService domainRepo.IAuthService, redisClient *repositories.RedisClient) {
+func SetupAuthRoutes(router *gin.RouterGroup, authUseCase *usecases.AuthUseCase, authService domainRepo.IAuthService, redisClient *repositories.RedisClient) {
 	router.POST("/auth/register", registerHandler(authUseCase))
 	router.POST("/auth/login", loginHandler(authUseCase))
 	router.POST("/auth/logout", AuthMiddleware(authService, redisClient), logoutHandler(authUseCase))

@@ -62,6 +62,10 @@ func main() {
 
 	router.Use(middleware.RequestID())
 
+	// Auth routes with rate limiting
+	authGroup := router.Group("")
+	authGroup.Use(middleware.RateLimit(redisClient, config.RateLimitMax, config.RateLimitWindow))
+
 	router.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
@@ -74,7 +78,7 @@ func main() {
 	})
 
 	authUseCase := handlers.NewAuthUseCaseHandler(userRepo, jwtService, redisClient)
-	handlers.SetupAuthRoutes(router, authUseCase, jwtService, redisClient)
+	handlers.SetupAuthRoutes(authGroup, authUseCase, jwtService, redisClient)
 
 	chatRepo := repositories.NewChatRepository()
 	fileRepo := repositories.NewFileRepository()

@@ -71,6 +71,18 @@ func (r *RedisClient) IsSessionValid(token string) (bool, error) {
 	return result > 0, nil
 }
 
+func (r *RedisClient) Incr(key string) (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return r.client.Incr(ctx, key).Result()
+}
+
+func (r *RedisClient) Expire(key string, expiry time.Duration) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	r.client.Expire(ctx, key, expiry)
+}
+
 func (r *RedisClient) Close() error {
 	return r.client.Close()
 }

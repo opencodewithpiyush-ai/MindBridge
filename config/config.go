@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -31,6 +32,8 @@ var (
 	JWTSecret       string
 	TokenTTLHours   int
 	BcryptCost      int
+	RateLimitMax    int
+	RateLimitWindow time.Duration
 	RedisHost       string
 	RedisPort       int
 	RedisUsername   string
@@ -85,6 +88,8 @@ func InitConfig() {
 	JWTSecret = getEnv("JWT_SECRET", "mindbridge-secret-key")
 	TokenTTLHours = getEnvInt("TOKEN_TTL_HOURS", 168)
 	BcryptCost = getEnvInt("BCRYPT_COST", 12)
+	RateLimitMax = getEnvInt("RATE_LIMIT_MAX", 5)
+	RateLimitWindow = getEnvDuration("RATE_LIMIT_WINDOW", 15*time.Minute)
 
 	RedisHost = getEnv("REDIS_HOST", "localhost")
 	RedisPort = getEnvInt("REDIS_PORT", 6379)
@@ -152,4 +157,14 @@ func getEnvInt(key string, defaultValue int) int {
 		return intVal
 	}
 	return defaultValue
+}
+
+func getEnvDuration(key string, defaultVal time.Duration) time.Duration {
+	if value := Get(key); value != "" {
+		d, err := time.ParseDuration(value)
+		if err == nil {
+			return d
+		}
+	}
+	return defaultVal
 }
