@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go build *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(go test *)",
+      "Bash(go install *)",
+      "Bash(mockery --all --output ./application/usecases/mocks)",
+      "Bash(go get *)",
+      "Bash(go mod *)",
+      "Bash(awk NR>=60 && NR<=80 *)",
+      "Bash(awk NR>=155 && NR<=175 *)",
+      "Bash(awk NR>=160 && NR<=170 *)",
+      "Bash(docker build *)"
+    ]
+  }
+}
