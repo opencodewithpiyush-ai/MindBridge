@@ -5,12 +5,18 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"mindbridge/infrastructure/repositories"
 )
+
+// redisCounter is an interface for the Redis operations needed by rate limiting.
+// Using an interface allows easy mocking in tests.
+type redisCounter interface {
+	Incr(key string) (int64, error)
+	Expire(key string, expiry time.Duration)
+}
 
 // RateLimit middleware limits repeated requests from the same IP.
 // It uses Redis INCR with TTL to count attempts within a sliding window.
-func RateLimit(redisClient *repositories.RedisClient, maxAttempts int, window time.Duration) gin.HandlerFunc {
+func RateLimit(redisClient redisCounter, maxAttempts int, window time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if redisClient == nil {
 			// No Redis – skip rate limiting
