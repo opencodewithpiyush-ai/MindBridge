@@ -16,7 +16,7 @@ import (
 func SetupAuthRoutes(router *gin.Engine, authUseCase *usecases.AuthUseCase, authService domainRepo.IAuthService, redisClient *repositories.RedisClient) {
 	router.POST("/auth/register", registerHandler(authUseCase))
 	router.POST("/auth/login", loginHandler(authUseCase))
-	router.POST("/auth/logout", AuthMiddleware(authService, redisClient), logoutHandler(redisClient, authService))
+	router.POST("/auth/logout", AuthMiddleware(authService, redisClient), logoutHandler(authUseCase))
 }
 
 func registerHandler(useCase *usecases.AuthUseCase) gin.HandlerFunc {
@@ -99,7 +99,7 @@ func loginHandler(useCase *usecases.AuthUseCase) gin.HandlerFunc {
 	}
 }
 
-func logoutHandler(redisClient *repositories.RedisClient, authService domainRepo.IAuthService) gin.HandlerFunc {
+func logoutHandler(authUseCase *usecases.AuthUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
 		logger := log.New(log.Writer(), "[LogoutHandler] ", log.LstdFlags)
@@ -116,9 +116,11 @@ func logoutHandler(redisClient *repositories.RedisClient, authService domainRepo
 
 		authHeader := c.GetHeader("Authorization")
 		tokenParts := strings.Split(authHeader, " ")
-		if len(tokenParts) > 1 && redisClient != nil {
+		if len(tokenParts) > 1 {
 			token := tokenParts[1]
-			redisClient.DeleteSession(token)
+			if err := authUseCase.Logout(userID.(string), token); err != nil {
+				logger.Printf("Logout error | UserID: %s | Error: %v", userID, err)
+			}
 		}
 
 		logger.Printf("Logout successful | UserID: %s | IP: %s", userID, clientIP)
