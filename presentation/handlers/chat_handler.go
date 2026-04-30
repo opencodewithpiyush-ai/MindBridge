@@ -50,9 +50,17 @@ func IndexHandler(c *gin.Context) {
 }
 
 func ListModelsHandler(c *gin.Context) {
+	models := make([]gin.H, len(config.Models))
+	for i, m := range config.Models {
+		public := config.InternalToPublic[m.Name]
+		if public == "" {
+			public = m.Name
+		}
+		models[i] = gin.H{"id": m.ID, "name": public, "display": m.Display}
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"models":  config.Models,
+		"models":  models,
 	})
 }
 
@@ -78,8 +86,9 @@ func chatStreamRawHandler(
 		}
 
 		if request.Model == "" {
-			request.Model = "gateway-claude-opus-4-1"
+			request.Model = "claude-opus-4-1"
 		}
+		request.Model = config.ResolveModel(request.Model)
 
 		userID := idGenerator.Generate()
 		email := emailGenerator.Generate()

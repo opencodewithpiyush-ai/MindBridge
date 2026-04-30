@@ -3,6 +3,7 @@ package usecases
 import (
 	"mindbridge/application/dto"
 	"mindbridge/domain/repositories"
+	"mindbridge/config"
 	"strings"
 )
 
@@ -37,6 +38,7 @@ func (u *ProcessChatUseCase) Execute(request dto.ChatRequestDTO) dto.ChatRespons
 	if modelName == "" {
 		modelName = "gateway-claude-opus-4-1"
 	}
+	modelName = config.ResolveModel(modelName)
 	for _, m := range u.availableModels {
 		if m == modelName {
 			validModel = true
