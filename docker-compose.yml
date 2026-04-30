@@ -7,8 +7,7 @@ services:
       - .env
     environment:
       - REDIS_HOST=redis
-    volumes:
-      - ./.env:/root/.env
+      - SERVER_HOST=0.0.0.0
     depends_on:
       - mongo
       - redis
