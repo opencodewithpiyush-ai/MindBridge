@@ -12,7 +12,13 @@
       "Bash(awk NR>=60 && NR<=80 *)",
       "Bash(awk NR>=155 && NR<=175 *)",
       "Bash(awk NR>=160 && NR<=170 *)",
-      "Bash(docker build *)"
+      "Bash(docker build *)",
+      "Bash(go vet *)",
+      "Bash(golangci-lint run *)",
+      "Bash(go run *)",
+      "Read(//tmp/**)",
+      "Bash(kill %1)",
+      "Bash(git commit *)"
     ]
   }
 }
