@@ -8,17 +8,9 @@ services:
     env_file:
       - .env
     environment:
-      - MONGO_CLUSTER=${MONGO_CLUSTER}
-      - MONGO_USERNAME=${MONGO_USERNAME}
-      - MONGO_PASSWORD=${MONGO_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-      - TOKEN_TTL_HOURS=${TOKEN_TTL_HOURS}
-      - BCRYPT_COST=${BCRYPT_COST}
       - REDIS_HOST=redis
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - SERVER_HOST=${SERVER_HOST}
-      - SERVER_PORT=${SERVER_PORT}
+    volumes:
+      - ./.env:/root/.env
     depends_on:
       - mongo
       - redis
