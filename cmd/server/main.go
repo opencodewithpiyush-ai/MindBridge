@@ -47,7 +47,6 @@ func main() {
 	collection := client.Database(config.MongoDBName).Collection("users")
 
 	userRepo := repositories.NewUserRepository(collection)
-	jwtService := repositories.NewJWTService(config.JWTSecret)
 
 	redisClient, err := repositories.NewRedisClient()
 	if err != nil {
@@ -55,6 +54,8 @@ func main() {
 	} else {
 		defer redisClient.Close()
 	}
+
+	jwtService := repositories.NewJWTService(config.JWTSecret, redisClient)
 
 	router := gin.Default()
 

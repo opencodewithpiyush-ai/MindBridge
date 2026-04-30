@@ -2,7 +2,6 @@ package usecases
 
 import (
 	"mindbridge/application/dto"
-	"time"
 )
 
 func (uc *AuthUseCase) Login(req dto.LoginRequestDTO) LoginResult {
@@ -18,11 +17,6 @@ func (uc *AuthUseCase) Login(req dto.LoginRequestDTO) LoginResult {
 	token, err := uc.authService.GenerateToken(user.ID)
 	if err != nil {
 		return LoginResult{Success: false, Error: "failed to generate token"}
-	}
-
-	if uc.redisClient != nil {
-		expiry := 7 * 24 * time.Hour
-		uc.redisClient.CreateSession(token, user.ID, expiry)
 	}
 
 	return LoginResult{

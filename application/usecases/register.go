@@ -40,11 +40,6 @@ func (uc *AuthUseCase) Register(req dto.RegisterRequestDTO) RegisterResult {
 		return RegisterResult{Success: false, Error: "failed to generate token"}
 	}
 
-	if uc.redisClient != nil {
-		expiry := 7 * 24 * time.Hour
-		uc.redisClient.CreateSession(token, user.ID, expiry)
-	}
-
 	return RegisterResult{
 		Success: true,
 		Data: dto.AuthResponseDTO{

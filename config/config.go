@@ -29,6 +29,8 @@ var (
 	MongoDBCluster  string
 	MongoDBName     string
 	JWTSecret       string
+	TokenTTLHours   int
+	BcryptCost      int
 	RedisHost       string
 	RedisPort       int
 	RedisUsername   string
@@ -81,6 +83,8 @@ func InitConfig() {
 	MongoDBCluster = getEnv("MONGO_CLUSTER", "")
 	MongoDBName = getEnv("MONGO_DB", "mindbridge")
 	JWTSecret = getEnv("JWT_SECRET", "mindbridge-secret-key")
+	TokenTTLHours = getEnvInt("TOKEN_TTL_HOURS", 168)
+	BcryptCost = getEnvInt("BCRYPT_COST", 12)
 
 	RedisHost = getEnv("REDIS_HOST", "localhost")
 	RedisPort = getEnvInt("REDIS_PORT", 6379)
