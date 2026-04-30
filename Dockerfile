@@ -17,7 +17,6 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /root/
 COPY --from=builder /app/mindbridge .
-COPY .env.example .env
 
 EXPOSE 5000
 
