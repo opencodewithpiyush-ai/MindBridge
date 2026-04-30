@@ -3,13 +3,13 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"mindbridge/application/dto"
 	"mindbridge/application/usecases"
 	"mindbridge/config"
 	domainRepo "mindbridge/domain/repositories"
 	"mindbridge/infrastructure/generators"
 	"mindbridge/infrastructure/repositories"
+	"mindbridge/utils"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -63,7 +63,8 @@ func chatStreamRawHandler(
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
-		logger := log.New(log.Writer(), "[ChatStreamRawHandler] ", log.LstdFlags)
+	requestID, _ := c.Get("request_id")
+	logger := utils.WithRequestID("ChatStreamRawHandler", fmt.Sprint(requestID))
 		logger.Printf("Raw stream endpoint called | IP: %s", clientIP)
 
 		var request dto.ChatRequestDTO
@@ -162,7 +163,8 @@ func truncate(s string, maxLen int) string {
 func fileUploadHandler(fileRepo domainRepo.IFileRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
-		logger := log.New(log.Writer(), "[FileUploadHandler] ", log.LstdFlags)
+		requestID, _ := c.Get("request_id")
+		logger := utils.WithRequestID("FileUploadHandler", fmt.Sprint(requestID))
 
 		file, header, err := c.Request.FormFile("file")
 		if err != nil {

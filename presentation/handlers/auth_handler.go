@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"log"
+	"fmt"
 	"mindbridge/application/dto"
 	"mindbridge/application/usecases"
 	domainRepo "mindbridge/domain/repositories"
@@ -22,7 +22,8 @@ func SetupAuthRoutes(router *gin.Engine, authUseCase *usecases.AuthUseCase, auth
 func registerHandler(useCase *usecases.AuthUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
-		logger := log.New(log.Writer(), "[RegisterHandler] ", log.LstdFlags)
+		requestID, _ := c.Get("request_id")
+		logger := utils.WithRequestID("RegisterHandler", fmt.Sprint(requestID))
 		logger.Printf("Register endpoint called | IP: %s", clientIP)
 
 		var request dto.RegisterRequestDTO
@@ -67,7 +68,8 @@ func registerHandler(useCase *usecases.AuthUseCase) gin.HandlerFunc {
 func loginHandler(useCase *usecases.AuthUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
-		logger := log.New(log.Writer(), "[LoginHandler] ", log.LstdFlags)
+		requestID, _ := c.Get("request_id")
+		logger := utils.WithRequestID("LoginHandler", fmt.Sprint(requestID))
 		logger.Printf("Login endpoint called | IP: %s", clientIP)
 
 		var request dto.LoginRequestDTO
@@ -102,7 +104,8 @@ func loginHandler(useCase *usecases.AuthUseCase) gin.HandlerFunc {
 func logoutHandler(authUseCase *usecases.AuthUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
-		logger := log.New(log.Writer(), "[LogoutHandler] ", log.LstdFlags)
+		requestID, _ := c.Get("request_id")
+		logger := utils.WithRequestID("LogoutHandler", fmt.Sprint(requestID))
 
 		userID, exists := c.Get("userID")
 		if !exists {

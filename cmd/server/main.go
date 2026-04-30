@@ -11,6 +11,7 @@ import (
 
 	"mindbridge/config"
 	"mindbridge/infrastructure/repositories"
+	"mindbridge/middleware"
 	"mindbridge/presentation/handlers"
 	"mindbridge/utils"
 
@@ -58,6 +59,8 @@ func main() {
 	jwtService := repositories.NewJWTService(config.JWTSecret, redisClient)
 
 	router := gin.Default()
+
+	router.Use(middleware.RequestID())
 
 	router.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
