@@ -51,7 +51,9 @@ func (s *JWTService) GenerateToken(userID string) (string, error) {
 	}
 
 	if s.redisClient != nil {
-		s.redisClient.CreateSession(jti, userID, s.tokenTTL)
+		if err := s.redisClient.CreateSession(jti, userID, s.tokenTTL); err != nil {
+			return "", err
+		}
 	}
 
 	return signed, nil

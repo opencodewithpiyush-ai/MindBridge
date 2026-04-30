@@ -6,43 +6,27 @@ import (
 	"unicode"
 )
 
-type ValidationError struct {
-	Field   string `json:"field"`
-	Message string `json:"message"`
-}
-
-func ValidateRegister(name, username, email, password string) []ValidationError {
-	var errors []ValidationError
+// ValidateRegister validates the registration fields and returns a slice of validation errors.
+func ValidateRegister(name, username, email, password string) []*ErrInvalid {
+	var errs []*ErrInvalid
 
 	if !validateName(name) {
-		errors = append(errors, ValidationError{
-			Field:   "name",
-			Message: "Name must contain only letters (no numbers, spaces, or special characters)",
-		})
+		errs = append(errs, &ErrInvalid{Field: "name", Message: "Name must contain only letters (no numbers, spaces, or special characters)"})
 	}
 
 	if !validateUsername(username) {
-		errors = append(errors, ValidationError{
-			Field:   "username",
-			Message: "Username must start with a letter, can contain letters and numbers (no special characters)",
-		})
+		errs = append(errs, &ErrInvalid{Field: "username", Message: "Username must start with a letter, can contain letters and numbers (no special characters)"})
 	}
 
 	if !validateEmail(email) {
-		errors = append(errors, ValidationError{
-			Field:   "email",
-			Message: "Please enter a valid email address",
-		})
+		errs = append(errs, &ErrInvalid{Field: "email", Message: "Please enter a valid email address"})
 	}
 
 	if !validatePassword(password, name, username, email) {
-		errors = append(errors, ValidationError{
-			Field:   "password",
-			Message: "Password must be 8+ chars with uppercase, lowercase, number, special char. Must not contain your name, username, or email",
-		})
+		errs = append(errs, &ErrInvalid{Field: "password", Message: "Password must be 8+ chars with uppercase, lowercase, number, special char. Must not contain your name, username, or email"})
 	}
 
-	return errors
+	return errs
 }
 
 func validateName(name string) bool {

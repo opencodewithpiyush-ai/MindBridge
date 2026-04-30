@@ -153,7 +153,10 @@ func getEnv(key, defaultValue string) string {
 func getEnvInt(key string, defaultValue int) int {
 	if value := Get(key); value != "" {
 		var intVal int
-		fmt.Sscanf(value, "%d", &intVal)
+		if _, err := fmt.Sscanf(value, "%d", &intVal); err != nil {
+			log.Printf("[Config] warning: could not parse int for %s: %v", key, err)
+			return defaultValue
+		}
 		return intVal
 	}
 	return defaultValue

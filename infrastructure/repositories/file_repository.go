@@ -34,13 +34,17 @@ func (r *FileRepository) UploadFile(fileName, fileType string, fileData []byte) 
 	if err != nil {
 		return "", "", err
 	}
-	namePart.Write([]byte(fileName))
+	if _, err := namePart.Write([]byte(fileName)); err != nil {
+		return "", "", err
+	}
 
 	typePart, err := writer.CreateFormField("type")
 	if err != nil {
 		return "", "", err
 	}
-	typePart.Write([]byte(fileType))
+	if _, err := typePart.Write([]byte(fileType)); err != nil {
+		return "", "", err
+	}
 
 	filePart, err := writer.CreatePart(map[string][]string{
 		"Content-Type":        {fileType},
@@ -49,7 +53,9 @@ func (r *FileRepository) UploadFile(fileName, fileType string, fileData []byte) 
 	if err != nil {
 		return "", "", err
 	}
-	filePart.Write(fileData)
+	if _, err := filePart.Write(fileData); err != nil {
+		return "", "", err
+	}
 
 	writer.Close()
 
@@ -78,7 +84,10 @@ func (r *FileRepository) UploadFile(fileName, fileType string, fileData []byte) 
 	}
 
 	var result map[string]interface{}
-	json.Unmarshal(body, &result)
+	if err := json.Unmarshal(body, &result); err != nil {
+		logger.Printf("[FileRepository] json unmarshal error: %v", err)
+		return "", "", err
+	}
 
 	key, _ := result["key"].(string)
 	fileURL, _ := result["url"].(string)
