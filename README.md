@@ -284,28 +284,30 @@ curl -X POST http://127.0.0.1:5000/upload \
 
 ## Available Models
 
-| ID | Name | Display Name |
-|----|------|--------------|
-| 1 | gateway-gpt-5-5 | GPT-5.5 (Latest) |
-| 2 | gateway-gpt-5-4 | GPT-5.4 |
-| 3 | gateway-gpt-5-3 | GPT-5.3 |
-| 4 | gateway-gpt-5-1 | GPT-5.1 |
-| 5 | gateway-gpt-5 | GPT-5 |
-| 6 | gateway-gpt-4o | GPT-4o |
-| 7 | gateway-gpt-4o-mini | GPT-4o Mini |
-| 8 | gateway-grok-4 | Grok-4 (xAI) |
-| 9 | gateway-claude-sonnet-4-6 | Claude Sonnet 4.6 |
-| 10 | gateway-claude-opus-4-5 | Claude Opus 4.5 |
-| 11 | gateway-claude-opus-4-1 | Claude Opus 4.1 |
-| 12 | gateway-deepseek-v4-pro | DeepSeek V4 Pro |
-| 13 | gateway-deepseek-v4-flash | DeepSeek V4 Flash |
-| 14 | gateway-deepseek-r1 | DeepSeek R1 |
-| 15 | gateway-gemini-3-1-pro | Gemini 3.1 Pro |
-| 16 | gateway-gemini-3-pro | Gemini 3 Pro |
-| 17 | gateway-gemini-2.5-flash | Gemini 2.5 Flash |
-| 18 | gateway-qwen-3-max | Qwen 3 Max |
-| 19 | gateway-llama-3-3-70b-versatile | Llama 3.3 70B |
-| 20 | gateway-deepinfra-kimi-k2 | Kimi K2 |
+OpenAI-compatible model names (use these in API requests):
+
+| ID | Public Name | Display Name |
+|----|------------|--------------|
+| 1 | gpt-5.5 | GPT-5.5 (Latest) |
+| 2 | gpt-5.4 | GPT-5.4 |
+| 3 | gpt-5.3 | GPT-5.3 |
+| 4 | gpt-5.1 | GPT-5.1 |
+| 5 | gpt-5 | GPT-5 |
+| 6 | gpt-4o | GPT-4o |
+| 7 | gpt-4o-mini | GPT-4o Mini |
+| 8 | grok-4 | Grok-4 (xAI) |
+| 9 | claude-sonnet-4-6 | Claude Sonnet 4.6 |
+| 10 | claude-opus-4-5 | Claude Opus 4.5 |
+| 11 | claude-opus-4-1 | Claude Opus 4.1 |
+| 12 | deepseek-v4-pro | DeepSeek V4 Pro |
+| 13 | deepseek-v4-flash | DeepSeek V4 Flash |
+| 14 | deepseek-r1 | DeepSeek R1 |
+| 15 | gemini-3.1-pro | Gemini 3.1 Pro |
+| 16 | gemini-3-pro | Gemini 3 Pro |
+| 17 | gemini-2.5-flash | Gemini 2.5 Flash |
+| 18 | qwen-3-max | Qwen 3 Max |
+| 19 | llama-3.3-70b-versatile | Llama 3.3 70B |
+| 20 | kimi-k2 | Kimi K2 |
 
 ## Features
 
