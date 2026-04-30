@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -36,6 +37,12 @@ var (
 
 func InitConfig() {
 	LoadEnv()
+
+	// Fail fast on missing critical secrets
+	requiredKeys := []string{"JWT_SECRET", "MONGO_CLUSTER"}
+	if err := LoadRequiredEnv(requiredKeys); err != nil {
+		log.Fatalf("[Config] %v", err)
+	}
 
 	Models = []Model{
 		{ID: 1, Name: "gateway-gpt-5-5", Display: "GPT-5.5 (Latest)"},
@@ -99,6 +106,27 @@ func LoadEnv() {
 	}
 }
 
+// LoadRequiredEnv checks that each key in keys is present in the environment.
+// It returns an error listing all missing keys.
+func LoadRequiredEnv(keys []string) error {
+	missing := []string{}
+	for _, key := range keys {
+		if Get(key) == "" {
+			missing = append(missing, key)
+		}
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("missing required environment variables: %v", missing)
+	}
+	return nil
+}
+
+// Get returns the value of the environment variable named by key.
+// It is a convenience wrapper around os.Getenv.
+func Get(key string) string {
+	return os.Getenv(key)
+}
+
 func GetMongoURI() string {
 	if MongoDBUsername != "" && MongoDBPassword != "" && MongoDBCluster != "" {
 		return fmt.Sprintf("mongodb+srv://%s:%s@%s/?appName=MindBridge", MongoDBUsername, MongoDBPassword, MongoDBCluster)
@@ -107,14 +135,14 @@ func GetMongoURI() string {
 }
 
 func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
+	if value := Get(key); value != "" {
 		return value
 	}
 	return defaultValue
 }
 
 func getEnvInt(key string, defaultValue int) int {
-	if value := os.Getenv(key); value != "" {
+	if value := Get(key); value != "" {
 		var intVal int
 		fmt.Sscanf(value, "%d", &intVal)
 		return intVal
