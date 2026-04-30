@@ -36,7 +36,7 @@ func (u *ProcessChatUseCase) Execute(request dto.ChatRequestDTO) dto.ChatRespons
 	validModel := false
 	modelName := request.Model
 	if modelName == "" {
-		modelName = "gateway-claude-opus-4-1"
+		modelName = "claude-opus-4-1"
 	}
 	modelName = config.ResolveModel(modelName)
 	for _, m := range u.availableModels {
