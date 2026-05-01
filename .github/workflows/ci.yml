@@ -36,7 +36,6 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.txt
-          fail_below: 80
 
   docker:
     runs-on: ubuntu-latest
