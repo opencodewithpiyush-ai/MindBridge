@@ -5,6 +5,7 @@ import (
 	"errors"
 	"mindbridge/domain/entities"
 	domainRepo "mindbridge/domain/repositories"
+	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,6 +16,19 @@ import (
 
 type UserRepository struct {
 	collection *mongo.Collection
+}
+
+var (
+	usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{3,30}$`)
+	emailRegex    = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+)
+
+func isValidUsername(username string) bool {
+	return usernameRegex.MatchString(username)
+}
+
+func isValidEmail(email string) bool {
+	return emailRegex.MatchString(email)
 }
 
 func NewUserRepository(collection *mongo.Collection) domainRepo.IUserRepository {
@@ -38,6 +52,10 @@ func (r *UserRepository) Create(user *entities.User) error {
 }
 
 func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
+	if !isValidEmail(email) {
+		return nil, nil
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -53,6 +71,10 @@ func (r *UserRepository) FindByEmail(email string) (*entities.User, error) {
 }
 
 func (r *UserRepository) FindByUsername(username string) (*entities.User, error) {
+	if !isValidUsername(username) {
+		return nil, nil
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
