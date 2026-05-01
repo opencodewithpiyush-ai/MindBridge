@@ -8,21 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func testRequestIDMiddleware() *httptest.ResponseRecorder {
-	gin.SetMode(gin.TestMode)
-	router := gin.New()
-	router.Use(RequestID())
-	router.GET("/", func(c *gin.Context) {
-		id, exists := c.Get("request_id")
-		if !exists {
-			c.String(http.StatusInternalServerError, "missing request_id")
-			return
-		}
-		c.String(http.StatusOK, id.(string))
-	})
-	return httptest.NewRecorder()
-}
-
 func TestRequestID_SetsHeader(t *testing.T) {
 	w := httptest.NewRecorder()
 	gin.SetMode(gin.TestMode)
