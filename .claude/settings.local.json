@@ -23,7 +23,9 @@
       "Bash(docker compose ps *)",
       "Bash(docker compose *)",
       "Bash(curl *)",
-      "Bash(go tool *)"
+      "Bash(go tool *)",
+      "Bash(./mindbridge.exe)",
+      "Bash(wait %1)"
     ]
   }
 }
