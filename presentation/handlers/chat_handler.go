@@ -170,6 +170,8 @@ func truncate(s string, maxLen int) string {
 }
 
 func fileUploadHandler(fileRepo domainRepo.IFileRepository) gin.HandlerFunc {
+	const maxUploadSize int64 = 10 << 20 // 10 MB
+
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
 		requestID, _ := c.Get("request_id")
@@ -186,7 +188,35 @@ func fileUploadHandler(fileRepo domainRepo.IFileRepository) gin.HandlerFunc {
 		}
 		defer file.Close()
 
-		fileData := make([]byte, header.Size)
+		if header.Size <= 0 {
+			logger.Printf("Invalid file size | IP: %s | Size: %d", clientIP, header.Size)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"error":   "Invalid file size",
+			})
+			return
+		}
+
+		if header.Size > maxUploadSize {
+			logger.Printf("File too large | IP: %s | Size: %d | Max: %d", clientIP, header.Size, maxUploadSize)
+			c.JSON(http.StatusRequestEntityTooLarge, gin.H{
+				"success": false,
+				"error":   "File size exceeds maximum allowed limit",
+			})
+			return
+		}
+
+		maxInt := int64(^uint(0) >> 1)
+		if header.Size > maxInt {
+			logger.Printf("File size overflows int | IP: %s | Size: %d", clientIP, header.Size)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"error":   "Invalid file size",
+			})
+			return
+		}
+
+		fileData := make([]byte, int(header.Size))
 		if _, err := file.Read(fileData); err != nil {
 			logger.Printf("Failed to read file | IP: %s | Error: %v", clientIP, err)
 			c.JSON(http.StatusBadRequest, gin.H{
