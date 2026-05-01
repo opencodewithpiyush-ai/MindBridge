@@ -1,323 +1,125 @@
 # MindBridge API
 
-A clean architecture REST API server with authentication, AI chat, and image editing capabilities.
+A clean‑architecture REST API built with Go, Gin, MongoDB, and Redis. It provides authentication, AI chat (OpenAI‑compatible model names), image editing, and real‑time streaming.
+
+---
 
 ## Technology Stack
-
-- **Framework**: Gin (Go web framework)
-- **Architecture**: Clean Architecture
+- **Language**: Go 1.26
+- **Web Framework**: Gin
 - **Database**: MongoDB
-- **Cache/Session**: Redis
+- **Cache / Session Store**: Redis
 - **Authentication**: JWT + Bcrypt
-- **WebSocket**: gorilla/websocket
-- **Streaming**: Server-Sent Events (SSE)
+- **Real‑time**: Server‑Sent Events (SSE) & WebSocket
+- **Frontend**: React + TypeScript (in `web/`)
+- **CI/CD**: GitHub Actions with lint, test, Docker build, and Render deploy
+
+---
 
 ## Project Structure
-
 ```
 MindBridge/
-├── cmd/server/                 # Entry point
-├── config/                     # Configuration & environment
-├── domain/
-│   ├── entities/               # Domain entities (User, Chat)
-│   └── repositories/           # Interface definitions
-├── application/
-│   ├── dto/                    # Data Transfer Objects
-│   └── usecases/               # Business logic
-├── infrastructure/
-│   ├── repositories/           # Implementations (MongoDB, WebSocket, JWT, Redis, File)
-│   └── generators/             # ID & Email generators
-├── presentation/
-│   └── handlers/               # HTTP handlers & middleware
-├── utils/                      # Validators & logging
-└── web/                        # React + TypeScript frontend
+├── cmd/server/                 # main entry point
+├── config/                     # env handling & model mapping
+├── domain/                     # entities & repository interfaces
+├── application/                # DTOs & use‑cases
+├── infrastructure/             # concrete implementations (Mongo, Redis, JWT, etc.)
+├── middleware/                 # request‑ID, rate‑limit, etc.
+├── presentation/               # HTTP handlers
+│   └── handlers/
+├── utils/                      # validators & logging helpers
+├── web/                        # React frontend
+└── .claude/                    # internal Claude Code files (ignored by Git)
 ```
 
-## Configuration
+---
 
-Create a `.env` file in the root directory by copying `.env.example`:
+## Setup & Run Locally
+1. **Clone & install dependencies**
+   ```bash
+   git clone https://github.com/yourorg/MindBridge.git
+   cd MindBridge
+   go mod tidy
+   ```
+2. **Create environment file**
+   ```bash
+   cp .env.example .env
+   # edit .env with your credentials
+   ```
+3. **Run the API server**
+   ```bash
+   go run ./cmd/server
+   ```
+   The server listens on `http://127.0.0.1:5000` (configurable via `SERVER_HOST` & `SERVER_PORT`).
+4. **Run the frontend**
+   ```bash
+   cd web
+   npm install
+   npm run dev
+   ```
+   Frontend will be available at `http://localhost:5173`.
 
+---
+
+## Docker
 ```bash
-cp .env.example .env
+# Build the image
+docker build -t mindbridge .
+# Run with Docker Compose (includes Redis & Mongo placeholders)
+docker compose up --build
 ```
+The API will be reachable at `http://0.0.0.0:5000`.
 
-Then update the values in `.env` with your credentials:
+---
 
-```env
-# MongoDB
-MONGO_USERNAME=your_username
-MONGO_PASSWORD=your_password
-MONGO_CLUSTER=cluster0.xxx.mongodb.net
-MONGO_DB=mindbridge
-
-# Redis (Cloud)
-REDIS_HOST=redis-xxx.cloud.redislabs.com
-REDIS_PORT=12345
-REDIS_USERNAME=default
-REDIS_PASSWORD=your_redis_password
-
-# JWT
-JWT_SECRET=your-secret-key-change-in-production
-
-# Server
-SERVER_HOST=127.0.0.1
-SERVER_PORT=5000
-
-# External Services
-WEBSOCKET_URL=wss://agents.use.ai/agents/budget-agent
-FILE_UPLOAD_URL=https://files.use.ai/upload
-FILE_BASE_URL=https://files.use.ai
-```
-
-## Running the Server
-
-```bash
-go run ./cmd/server
-```
-
-Server runs at `http://127.0.0.1:5000`
-
-## Running the Frontend
-
-```bash
-cd web
-npm install
-npm run dev
-```
-
-Frontend runs at `http://localhost:5173`
-
-## API Endpoints
-
-### Authentication (Public)
-
+## API Overview
+### Authentication (public)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/auth/register` | Register new user |
-| POST | `/auth/login` | Login and get token |
+| POST   | `/auth/register` | Register a new user |
+| POST   | `/auth/login`    | Obtain JWT token |
+| POST   | `/auth/logout`   | Invalidate session |
 
 ### Public Endpoints
-
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/` | API info |
-| GET | `/models` | List available models |
+| GET    | `/`      | API health/info |
+| GET    | `/models`| List OpenAI‑compatible model names |
 
-### Protected Endpoints (Requires JWT Token)
-
+### Protected Endpoints (JWT required)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/chat/stream-raw` | Send chat message (SSE stream, all events incl. tool calls) |
-| POST | `/auth/logout` | Logout and invalidate session |
-| POST | `/upload` | Upload image/file |
+| POST   | `/chat/stream-raw` | Chat with AI (SSE) |
+| POST   | `/upload`          | Upload image/file |
 
 ---
 
-## API Usage
-
-### POST /auth/register
-
-**Request:**
-```json
-{
-  "name": "Piyush Makwana",
-  "username": "piyushmakwana",
-  "email": "piyush@example.com",
-  "password": "Piyush@1234"
-}
-```
-
-**Validations:**
-- `name`: Only letters and spaces (no numbers or special characters, no leading spaces)
-- `username`: Must start with a letter, can contain letters and numbers (no special characters)
-- `email`: Valid email format (temp email domains blocked)
-- `password`: 8+ chars with uppercase, lowercase, number, special char. Must not contain name, username, or email
-
-**Success Response (201):**
-```json
-{
-  "success": true,
-  "message": "User registered successfully",
-  "data": {
-    "token": "eyJhbGci...",
-    "user": {
-      "id": "65f...",
-      "name": "Piyush Makwana",
-      "username": "piyushmakwana",
-      "email": "piyush@example.com"
-    }
-  }
-}
-```
-
-**Error Response (400) - Validation Error:**
-```json
-{
-  "success": false,
-  "errors": [
-    {
-      "field": "name",
-      "message": "Name must contain only letters (no numbers, spaces, or special characters)"
-    }
-  ]
-}
-```
-
-### POST /auth/login
-
-**Request:**
-```json
-{
-  "email": "piyush@example.com",
-  "password": "Piyush@1234"
-}
-```
-
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "token": "eyJhbGci...",
-    "user": {
-      "id": "65f...",
-      "name": "Piyush Makwana",
-      "username": "piyushmakwana",
-      "email": "piyush@example.com"
-    }
-  }
-}
-```
-
-**Error Response (401):**
-```json
-{
-  "success": false,
-  "error": "invalid email or password"
-}
-```
-
-### POST /auth/logout (Protected)
-
-```bash
-curl -X POST http://127.0.0.1:5000/auth/logout \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "message": "Logout successful"
-}
-```
-
-### GET /
-
-```bash
-curl http://127.0.0.1:5000/
-```
-
-### GET /models
-
-```bash
-curl http://127.0.0.1:5000/models
-```
-
-### POST /chat/stream-raw (Protected - Full SSE Events)
-
-Streams all raw WebSocket events including tool calls (image generation, editing, etc.).
-
-```bash
-curl -X POST http://127.0.0.1:5000/chat/stream-raw \
-  -H "Content-Type: application/json" \
-  -H "Accept: text/event-stream" \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -d '{"query": "Edit this image", "model": "gateway-claude-sonnet-4-6", "files": [{"name": "img.jpg", "type": "image/jpeg", "url": "https://files.use.ai/files/..."}]}'
-```
-
-**Response Events:**
-```
-event: connected
-data: {"status": "connected"}
-
-event: chunk
-data: {"type": "stream-start", ...}
-
-event: chunk
-data: {"type": "data-chat-title-update", "data": {"title": "..."}}
-
-event: chunk
-data: {"chunk": {"type": "text-delta", "delta": "Hello"}}
-
-event: chunk
-data: {"chunk": {"type": "tool-input-available", "toolName": "image-google", "input": {...}}}
-
-event: chunk
-data: {"chunk": {"type": "tool-image-google", "output": {"images": [{"url": "..."}]}}}
-
-event: done
-data: {"title": "...", "response": "..."}
-```
-
-### POST /upload (Protected - File Upload)
-
-```bash
-curl -X POST http://127.0.0.1:5000/upload \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -F "file=@image.jpg" \
-  -F "name=image.jpg" \
-  -F "type=image/jpeg"
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "key": "chat/files/b738979b-...-image.jpg",
-  "url": "/files/chat%2Ffiles%2Fb738979b-...-image.jpg"
-}
-```
+## Model Mapping
+The API accepts **OpenAI‑compatible** model identifiers (e.g., `gpt-4o`, `claude-sonnet-4-6`). Internally these map to gateway names via `config/model_mapping.go`. See the **Available Models** table in the API docs for the full list.
 
 ---
 
-## Available Models
+## Testing
+```bash
+go test ./...   # run all unit tests
+```
+Tests cover middleware, handlers, and use‑case logic. CI runs `golangci-lint`, tests, and Docker build automatically.
 
-OpenAI-compatible model names (use these in API requests):
+---
 
-| ID | Public Name | Display Name |
-|----|------------|--------------|
-| 1 | gpt-5.5 | GPT-5.5 (Latest) |
-| 2 | gpt-5.4 | GPT-5.4 |
-| 3 | gpt-5.3 | GPT-5.3 |
-| 4 | gpt-5.1 | GPT-5.1 |
-| 5 | gpt-5 | GPT-5 |
-| 6 | gpt-4o | GPT-4o |
-| 7 | gpt-4o-mini | GPT-4o Mini |
-| 8 | grok-4 | Grok-4 (xAI) |
-| 9 | claude-sonnet-4-6 | Claude Sonnet 4.6 |
-| 10 | claude-opus-4-5 | Claude Opus 4.5 |
-| 11 | claude-opus-4-1 | Claude Opus 4.1 |
-| 12 | deepseek-v4-pro | DeepSeek V4 Pro |
-| 13 | deepseek-v4-flash | DeepSeek V4 Flash |
-| 14 | deepseek-r1 | DeepSeek R1 |
-| 15 | gemini-3.1-pro | Gemini 3.1 Pro |
-| 16 | gemini-3-pro | Gemini 3 Pro |
-| 17 | gemini-2.5-flash | Gemini 2.5 Flash |
-| 18 | qwen-3-max | Qwen 3 Max |
-| 19 | llama-3.3-70b-versatile | Llama 3.3 70B |
-| 20 | kimi-k2 | Kimi K2 |
+## Contributing
+1. Fork the repository.
+2. Create a feature branch.
+3. Write tests for new behavior (TDD is encouraged).
+4. Ensure `go test ./...` and `golangci-lint run` pass.
+5. Open a Pull Request.
 
-## Features
+---
 
-- **20 AI Models**: Single gateway for OpenAI, Anthropic, Google, xAI, DeepSeek, and more
-- **JWT Authentication**: Register, login, logout with session management via Redis
-- **Real-time Streaming**: SSE-based streaming for chat responses
-- **Image Editing**: Upload images and edit them via AI (shirt change, glasses, etc.)
-- **File Upload**: Support for images and files with preview
-- **Validation**: Strict input validation for registration
+## License
+MIT License – see the `LICENSE` file.
 
-## Support The Developer
+---
 
-Give it a ⭐. If You Found This Useful.
+## Security
+For security‑related concerns, see the [SECURITY.md](SECURITY.md) file.

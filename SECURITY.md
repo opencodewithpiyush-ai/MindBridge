@@ -1,21 +1,35 @@
 # Security Policy
 
 ## Supported Versions
+| Version | Supported | Details |
+|---------|-----------|---------|
+| 5.1.x | ✅ | Current version with security updates
+| 4.0.x | ✅ | Minor security fixes
+| < 4.0  | ❌ | No security updates provided
 
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
+## Vulnerability Reporting
+We take security seriously and appreciate reports of potential issues.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 5.1.x   | :white_check_mark: |
-| 5.0.x   | :x:                |
-| 4.0.x   | :white_check_mark: |
-| < 4.0   | :x:                |
+**To Report a Vulnerability**:
+1. **Responsible Disclosure**: Please contact security@mindbridge.dev via encrypted email.
+2. **Bug Bounty**: No formal program currently exists, but good‑faith reports are rewarded.
+3. **What to Include**:
+   - Reproducible steps
+   - Environment details (Git commit hash if available)
+   - Impact assessment
+   - Suggested fixes
 
-## Reporting a Vulnerability
+**Response Timeline**:
+- Acknowledgment within 24‑48 hours
+- Initial triage within 5 business days
+- Patch development timeline varies by severity (3‑7 days typical)
 
-Use this section to tell people how to report a vulnerability.
+## Incident Response
+In case of a security incident:
+- **Detection**: Monitored through Honeybadger.io and server logs.
+- **Containment**: Immediate service isolation if needed.
+- **Communication**: Transparent updates via SECURITY.md and project channels.
+- **Mitigation**: Automated patch deployment process (CI/CD pipeline integration).
 
-Tell them where to go, how often they can expect to get an update on a
-reported vulnerability, what to expect if the vulnerability is accepted or
-declined, etc.
+## License
+This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for the full text.
