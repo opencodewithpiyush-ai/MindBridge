@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import './App.css';
-import LandingPage from './pages/LandingPage';
-import RegisterPage from './pages/RegisterPage';
-import LoginPage from './pages/LoginPage';
+import LandingPage from './pages/landing/LandingPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import LoginPage from './pages/auth/LoginPage';
+
 
 export default function App() {
   return (
