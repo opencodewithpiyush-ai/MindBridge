@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -34,6 +35,8 @@ var (
 	BcryptCost      int
 	RateLimitMax    int
 	RateLimitWindow time.Duration
+	IPWhitelist    []string
+	IPBlacklist    []string
 	RedisHost       string
 	RedisPort       int
 	RedisUsername   string
@@ -90,6 +93,10 @@ func InitConfig() {
 	BcryptCost = getEnvInt("BCRYPT_COST", 12)
 	RateLimitMax = getEnvInt("RATE_LIMIT_MAX", 5)
 	RateLimitWindow = getEnvDuration("RATE_LIMIT_WINDOW", 15*time.Minute)
+
+	// Comma‑separated list of IPs that should always be allowed or always blocked.
+	IPWhitelist = parseCSVEnv("IP_WHITELIST")
+	IPBlacklist = parseCSVEnv("IP_BLACKLIST")
 
 	RedisHost = getEnv("REDIS_HOST", "localhost")
 	RedisPort = getEnvInt("REDIS_PORT", 6379)
@@ -170,4 +177,22 @@ func getEnvDuration(key string, defaultVal time.Duration) time.Duration {
 		}
 	}
 	return defaultVal
+}
+
+// parseCSVEnv reads a comma‑separated list from the environment and returns a slice.
+// Whitespace around commas is trimmed; empty entries are discarded.
+func parseCSVEnv(key string) []string {
+	val := Get(key)
+	if val == "" {
+		return nil
+	}
+	parts := strings.Split(val, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }

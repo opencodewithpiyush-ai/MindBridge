@@ -45,8 +45,15 @@ export default function RegisterPage() {
         throw new Error(data.error || data.message || 'Registration failed. Please try again.');
       }
 
-      setSuccess('Account created! Redirecting to login...');
-      setTimeout(() => navigate('/login'), 1800);
+      // Store token if returned (same shape as login)
+      if (data.data?.token) {
+        localStorage.setItem('mb_token', data.data.token);
+      } else if (data.token) {
+        localStorage.setItem('mb_token', data.token);
+      }
+
+      setSuccess('Account created! Redirecting to chat...');
+      setTimeout(() => navigate('/chat'), 1800);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"time"
 
+	"mindbridge/config"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,12 +21,31 @@ type redisCounter interface {
 func RateLimit(redisClient redisCounter, maxAttempts int, window time.Duration) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if redisClient == nil {
-			// No Redis – skip rate limiting
 			c.Next()
 			return
 		}
 
 		ip := c.ClientIP()
+
+		// ---- Blacklist: block immediately ----
+		for _, blocked := range config.IPBlacklist {
+			if ip == blocked {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+					"success": false,
+					"error":   "Your IP is blocked.",
+				})
+				return
+			}
+		}
+
+		// ---- Whitelist: skip rate limiting ----
+		for _, allowed := range config.IPWhitelist {
+			if ip == allowed {
+				c.Next()
+				return
+			}
+		}
+
 		key := "rate_limit:" + ip + ":" + c.FullPath()
 
 		count, err := redisClient.Incr(key)

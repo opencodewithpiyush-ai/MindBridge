@@ -34,3 +34,16 @@ type LoginResult struct {
 }
 
 var ErrInvalidToken = errors.New("invalid token")
+
+func (uc *AuthUseCase) GetProfile(userID string) (dto.UserDTO, error) {
+	user, err := uc.userRepo.FindByID(userID)
+	if err != nil || user == nil {
+		return dto.UserDTO{}, errors.New("user not found")
+	}
+	return dto.UserDTO{
+		ID:       user.ID,
+		Name:     user.Name,
+		Username: user.Username,
+		Email:    user.Email,
+	}, nil
+}

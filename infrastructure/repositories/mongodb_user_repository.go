@@ -94,15 +94,45 @@ func (r *UserRepository) FindByID(id string) (*entities.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	var user entities.User
-	filter := bson.M{"_id": id}
-	opts := options.FindOne().SetProjection(bson.M{"password": 0})
-	err := r.collection.FindOne(ctx, filter, opts).Decode(&user)
-	if err != nil {
+	filter := bson.M{}
+	if objID, err := primitive.ObjectIDFromHex(id); err == nil {
+		filter["_id"] = objID // most common case
+	} else {
+		filter["_id"] = id // fallback for non‑ObjectID ids
+	}
+
+	type mongoUser struct {
+		ID        interface{}        `bson:"_id"` // could be ObjectID or string
+		Name      string             `bson:"name,omitempty"`
+		Username  string             `bson:"username,omitempty"`
+		Email     string             `bson:"email,omitempty"`
+		CreatedAt primitive.DateTime `bson:"created_at,omitempty"`
+		UpdatedAt primitive.DateTime `bson:"updated_at,omitempty"`
+	}
+	var mu mongoUser
+
+	opts := options.FindOne().SetProjection(bson.M{"password": 0}) // never return the hash
+	if err := r.collection.FindOne(ctx, filter, opts).Decode(&mu); err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return &user, nil
+
+	user := &entities.User{
+		Name:      mu.Name,
+		Username:  mu.Username,
+		Email:     mu.Email,
+		CreatedAt: mu.CreatedAt.Time(),
+		UpdatedAt: mu.UpdatedAt.Time(),
+	}
+
+	switch v := mu.ID.(type) {
+	case primitive.ObjectID:
+		user.ID = v.Hex()
+	case string:
+		user.ID = v
+	}
+
+	return user, nil
 }

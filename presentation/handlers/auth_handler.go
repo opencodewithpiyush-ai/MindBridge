@@ -17,6 +17,7 @@ func SetupAuthRoutes(router *gin.RouterGroup, authUseCase *usecases.AuthUseCase,
 	router.POST("/auth/register", registerHandler(authUseCase))
 	router.POST("/auth/login", loginHandler(authUseCase))
 	router.POST("/auth/logout", AuthMiddleware(authService), logoutHandler(authUseCase))
+	router.GET("/user/profile", AuthMiddleware(authService), profileHandler(authUseCase))
 }
 
 func registerHandler(useCase *usecases.AuthUseCase) gin.HandlerFunc {
@@ -98,6 +99,31 @@ func loginHandler(useCase *usecases.AuthUseCase) gin.HandlerFunc {
 				"error":   result.Error,
 			})
 		}
+	}
+}
+
+func profileHandler(authUseCase *usecases.AuthUseCase) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		clientIP := c.ClientIP()
+		requestID, _ := c.Get("request_id")
+		logger := utils.WithRequestID("ProfileHandler", fmt.Sprint(requestID))
+		logger.Printf("Profile endpoint called | IP: %s", clientIP)
+
+		userID, exists := c.Get("userID")
+		if !exists {
+			logger.Printf("User not authenticated | IP: %s", clientIP)
+			c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": "Unauthorized"})
+			return
+		}
+
+		profile, err := authUseCase.GetProfile(userID.(string))
+		if err != nil {
+			logger.Printf("Profile fetch error | UserID: %s | Error: %v", userID, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to fetch profile"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"success": true, "data": gin.H{"user": profile}})
 	}
 }
 
