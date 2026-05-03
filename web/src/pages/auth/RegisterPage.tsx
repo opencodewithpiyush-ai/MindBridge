@@ -52,8 +52,8 @@ export default function RegisterPage() {
         localStorage.setItem('mb_token', data.token);
       }
 
-      setSuccess('Account created! Redirecting to chat...');
-      setTimeout(() => navigate('/chat'), 1800);
+      setSuccess('Account created! Redirecting to home...');
+      setTimeout(() => navigate('/'), 1800);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
