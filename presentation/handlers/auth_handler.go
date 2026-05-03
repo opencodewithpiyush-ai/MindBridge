@@ -5,18 +5,18 @@ import (
 	"mindbridge/application/dto"
 	"mindbridge/application/usecases"
 	domainRepo "mindbridge/domain/repositories"
-	"mindbridge/infrastructure/repositories"
 	"mindbridge/utils"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
-func SetupAuthRoutes(router *gin.RouterGroup, authUseCase *usecases.AuthUseCase, authService domainRepo.IAuthService, redisClient *repositories.RedisClient) {
+func SetupAuthRoutes(router *gin.RouterGroup, authUseCase *usecases.AuthUseCase, authService domainRepo.IAuthService) {
 	router.POST("/auth/register", registerHandler(authUseCase))
 	router.POST("/auth/login", loginHandler(authUseCase))
-	router.POST("/auth/logout", AuthMiddleware(authService, redisClient), logoutHandler(authUseCase))
+	router.POST("/auth/logout", AuthMiddleware(authService), logoutHandler(authUseCase))
 }
 
 func registerHandler(useCase *usecases.AuthUseCase) gin.HandlerFunc {
@@ -121,8 +121,20 @@ func logoutHandler(authUseCase *usecases.AuthUseCase) gin.HandlerFunc {
 		tokenParts := strings.Split(authHeader, " ")
 		if len(tokenParts) > 1 {
 			token := tokenParts[1]
-			if err := authUseCase.Logout(userID.(string), token); err != nil {
-				logger.Printf("Logout error | UserID: %s | Error: %v", userID, err)
+
+			// Parse token without verification to extract the jti (session ID)
+			parsed, _, err := jwt.NewParser().ParseUnverified(token, jwt.MapClaims{})
+			if err != nil {
+				logger.Printf("Failed to parse token for logout | UserID: %s | Error: %v", userID, err)
+			} else {
+				if claims, ok := parsed.Claims.(jwt.MapClaims); ok {
+					jti, _ := claims["jti"].(string)
+					if jti != "" {
+						if err := authUseCase.Logout(userID.(string), jti); err != nil {
+							logger.Printf("Logout error | UserID: %s | Error: %v", userID, err)
+						}
+					}
+				}
 			}
 		}
 

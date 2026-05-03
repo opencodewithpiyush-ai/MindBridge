@@ -32,11 +32,16 @@ func NewRedisClient() (*RedisClient, error) {
 	return &RedisClient{client: client}, nil
 }
 
-func (r *RedisClient) CreateSession(token string, userID string, expiry time.Duration) error {
+func (r *RedisClient) CreateSession(jti string, userID string, expiry time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return r.client.Set(ctx, "session:"+token, userID, expiry).Err()
+	// Store session keyed by jti
+	if err := r.client.Set(ctx, "session:"+jti, userID, expiry).Err(); err != nil {
+		return err
+	}
+	// Also add jti to the user's session set
+	return r.client.SAdd(ctx, "user_sessions:"+userID, jti).Err()
 }
 
 func (r *RedisClient) GetSession(token string) (string, error) {
@@ -53,11 +58,29 @@ func (r *RedisClient) GetSession(token string) (string, error) {
 	return result, nil
 }
 
-func (r *RedisClient) DeleteSession(token string) error {
+func (r *RedisClient) DeleteSession(jti string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	return r.client.Del(ctx, "session:"+token).Err()
+	// Retrieve userID before deleting session
+	userID, err := r.client.Get(ctx, "session:"+jti).Result()
+	if err != nil && err != redis.Nil {
+		return err
+	}
+
+	// Delete session key
+	if err := r.client.Del(ctx, "session:"+jti).Err(); err != nil {
+		return err
+	}
+
+	// Remove jti from user's session set
+	if userID != "" {
+		if err := r.client.SRem(ctx, "user_sessions:"+userID, jti).Err(); err != nil {
+			// Non-critical, log but don't fail
+			fmt.Printf("[Redis] Warning: could not remove jti from user set: %v\n", err)
+		}
+	}
+	return nil
 }
 
 func (r *RedisClient) IsSessionValid(token string) (bool, error) {

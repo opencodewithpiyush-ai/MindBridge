@@ -67,10 +67,10 @@ func main() {
 	authGroup := router.Group("")
 	authGroup.Use(middleware.RateLimit(container.RedisClient, config.RateLimitMax, config.RateLimitWindow))
 
-	handlers.SetupAuthRoutes(authGroup, container.AuthUseCase, container.AuthService, container.RedisClient)
+	handlers.SetupAuthRoutes(authGroup, container.AuthUseCase, container.AuthService)
 
 	protected := router.Group("/")
-	protected.Use(handlers.AuthMiddleware(container.AuthService, container.RedisClient))
+	protected.Use(handlers.AuthMiddleware(container.AuthService))
 	handlers.SetupChatRoutes(protected, container.ChatRepo, container.FileRepo)
 
 	router.GET("/", handlers.IndexHandler)

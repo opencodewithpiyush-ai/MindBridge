@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       // During local dev: /api/* → backend (bypasses browser CORS entirely)
       '/api': {
-        target: 'https://test-mindbridge-v1-1.onrender.com',
+        target: 'http://127.0.0.1:5000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
         secure: true,

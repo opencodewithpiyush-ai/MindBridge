@@ -1,8 +1,8 @@
 package usecases
 
-func (uc *AuthUseCase) Logout(userID, token string) error {
+func (uc *AuthUseCase) Logout(userID, jti string) error {
 	if uc.redisClient == nil {
 		return nil
 	}
-	return uc.redisClient.DeleteSession(token)
+	return uc.redisClient.DeleteSession(jti)
 }

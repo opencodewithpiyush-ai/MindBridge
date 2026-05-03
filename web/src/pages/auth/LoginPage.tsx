@@ -50,7 +50,7 @@ export default function LoginPage() {
       }
 
       setSuccess('Welcome back! Logging you in...');
-      setTimeout(() => navigate('/'), 1500);
+      setTimeout(() => navigate('/chat'), 1500);
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
