@@ -1,111 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+
 :root {
+  /* === Original Palette (preserved) === */
   --text: #E36A6A;
   --text-h: #E36A6A;
   --bg: #FFFBF1;
   --border: #FFB2B2;
   --code-bg: #FFF2D0;
   --accent: #E36A6A;
-  --accent-bg: rgba(227, 106, 106, 0.1);
-  --accent-border: rgba(227, 106, 106, 0.5);
-  --social-bg: rgba(255, 178, 178, 0.5);
+  --accent-bg: rgba(227, 106, 106, 0.10);
+  --accent-border: rgba(227, 106, 106, 0.50);
+  --social-bg: rgba(255, 178, 178, 0.50);
   --shadow:
-    rgba(227, 106, 106, 0.1) 0 10px 15px -3px, rgba(227, 106, 106, 0.05) 0 4px 6px -2px;
+    rgba(227, 106, 106, 0.10) 0 10px 15px -3px,
+    rgba(227, 106, 106, 0.05) 0 4px 6px -2px;
 
-  --sans: 'Albert Sans';
-  --heading: 'Bricolage Grotesque';
+  /* === Fonts === */
+  --sans: 'Albert Sans', system-ui, sans-serif;
+  --heading: 'Bricolage Grotesque', system-ui, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
+
+  /* === Landing Extended Palette === */
+  --coral:       #E36A6A;
+  --coral-dark:  #c94e4e;
+  --coral-light: #f08e8e;
+  --cream:       #FFFBF1;
+  --peach:       #FFB2B2;
+  --rose-fade:   rgba(227, 106, 106, 0.08);
+  --card-bg:     rgba(255, 255, 255, 0.72);
+  --card-border: rgba(255, 178, 178, 0.45);
+  --glass:       rgba(255, 251, 241, 0.60);
+  --deep:        #3a1a1a;
+  --muted:       #9a6060;
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
+  color: #3a1a1a;
+  background: var(--cream);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  @media (max-width: 1024px) {
+  @media (max-width: 768px) {
     font-size: 16px;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #FFB2B2;
-    --text-h: #FFFBF1;
-    --bg: #E36A6A;
-    --border: #FFB2B2;
-    --code-bg: #FFF2D0;
-    --accent: #FFFBF1;
-    --accent-bg: rgba(255, 251, 241, 0.15);
-    --accent-border: rgba(255, 251, 241, 0.5);
-    --social-bg: rgba(255, 178, 178, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-#root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
+  padding: 0;
+  background: var(--cream);
+  overflow-x: hidden;
 }
 
-h1,
-h2 {
+#root {
+  width: 100%;
+  min-height: 100svh;
+}
+
+h1, h2, h3 {
   font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
-
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
+  font-weight: 700;
+  color: var(--deep);
   margin: 0;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+p {
+  margin: 0;
+  color: var(--muted);
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--sans);
+}
+
+input {
+  font-family: var(--sans);
+}
+
+/* === Root === */
+#root {
+  width: 100%;
+  min-height: 100svh;
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: var(--peach); border-radius: 3px; }
+
+/* === Selection === */
+::selection {
+  background: rgba(227, 106, 106, 0.20);
+  color: var(--deep);
 }
