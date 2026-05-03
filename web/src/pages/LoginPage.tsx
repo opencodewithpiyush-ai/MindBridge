@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './AuthPage.css';
 
-const API_BASE = 'https://test-mindbridge-v1-1.onrender.com';
+import API_BASE from '../api';
 
 export default function LoginPage() {
   const navigate = useNavigate();

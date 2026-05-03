@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"mindbridge/config"
 	"mindbridge/infrastructure/di"
@@ -13,6 +14,7 @@ import (
 	"mindbridge/presentation/handlers"
 	"mindbridge/utils"
 
+	cors "github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,6 +41,25 @@ func main() {
 	logger.Println("Connected to MongoDB")
 
 	router := gin.Default()
+
+	// CORS — must be first so OPTIONS preflight is handled before auth/rate-limit
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:5173",
+			"http://localhost:3000",
+			"https://test-mindbridge-v1-1.onrender.com",
+			"https://*.onrender.com",
+		},
+		AllowOriginFunc: func(origin string) bool {
+			// Allow all origins in development; lock down in production via env
+			return true
+		},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Accept", "X-Request-ID"},
+		ExposeHeaders:    []string{"Content-Length", "X-Request-ID"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	router.Use(middleware.RequestID())
 
